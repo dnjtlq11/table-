@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>식단 입력 페이지</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background-color: #f0f0f0; }
+    input[type="text"] { width: 95%; padding: 4px; }
+    .save-btn { margin-top: 20px; padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+
+<h2>주간 식단 입력</h2>
+<p>시작 날짜 선택 (월요일 기준): <input type="date" id="startDate"></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>구분</th>
+      <th>월</th>
+      <th>화</th>
+      <th>수</th>
+      <th>목</th>
+      <th>금</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>중식</td>
+      <td><input type="text" id="lunch0"></td>
+      <td><input type="text" id="lunch1"></td>
+      <td><input type="text" id="lunch2"></td>
+      <td><input type="text" id="lunch3"></td>
+      <td><input type="text" id="lunch4"></td>
+    </tr>
+    <tr>
+      <td>석식</td>
+      <td><input type="text" id="dinner0"></td>
+      <td><input type="text" id="dinner1"></td>
+      <td><input type="text" id="dinner2"></td>
+      <td><input type="text" id="dinner3"></td>
+      <td><input type="text" id="dinner4"></td>
+    </tr>
+  </tbody>
+</table>
+
+<button class="save-btn" onclick="saveData()">입력 완료 → 결과 보기</button>
+
+<script>
+  function saveData() {
+    const startDate = document.getElementById('startDate').value;
+    if (!startDate) {
+      alert('시작 날짜를 선택해주세요.');
+      return;
+    }
+    const data = {
+      startDate,
+      lunch: [],
+      dinner: []
+    };
+    for (let i = 0; i < 5; i++) {
+      data.lunch.push(document.getElementById('lunch' + i).value);
+      data.dinner.push(document.getElementById('dinner' + i).value);
+    }
+    localStorage.setItem('weeklyMenu', JSON.stringify(data));
+    window.location.href = 'menu_result.html';
+  }
+</script>
+
+</body>
+</html>

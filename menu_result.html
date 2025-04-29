@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>주간 식단표</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background-color: #f0f0f0; }
+  </style>
+</head>
+<body>
+
+<h2>이번 주 구내식당 식단표</h2>
+<table>
+  <thead>
+    <tr id="dateHeader">
+      <th>구분</th>
+      <th>월</th>
+      <th>화</th>
+      <th>수</th>
+      <th>목</th>
+      <th>금</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>중식</td>
+      <td id="lunch0"></td>
+      <td id="lunch1"></td>
+      <td id="lunch2"></td>
+      <td id="lunch3"></td>
+      <td id="lunch4"></td>
+    </tr>
+    <tr>
+      <td>석식</td>
+      <td id="dinner0"></td>
+      <td id="dinner1"></td>
+      <td id="dinner2"></td>
+      <td id="dinner3"></td>
+      <td id="dinner4"></td>
+    </tr>
+  </tbody>
+</table>
+
+<script>
+  const data = JSON.parse(localStorage.getItem('weeklyMenu'));
+  if (!data) {
+    document.body.innerHTML = '<p>저장된 식단 데이터가 없습니다. 입력 페이지에서 먼저 작성해주세요.</p>';
+  } else {
+    const startDate = new Date(data.startDate);
+    const days = ['월', '화', '수', '목', '금'];
+    for (let i = 0; i < 5; i++) {
+      document.getElementById('lunch' + i).innerText = data.lunch[i];
+      document.getElementById('dinner' + i).innerText = data.dinner[i];
+    }
+
+    const header = document.getElementById('dateHeader');
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      const label = `${d.getMonth() + 1}월 ${d.getDate()}일 (${days[i]})`;
+      header.children[i + 1].innerText = label;
+    }
+  }
+</script>
+
+</body>
+</html>
