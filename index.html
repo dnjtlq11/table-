@@ -10,6 +10,12 @@
     th { background-color: #f0f0f0; }
     input[type="text"] { width: 95%; padding: 4px; }
     .save-btn { margin-top: 20px; padding: 10px 20px; font-size: 16px; }
+    .color-buttons { display: flex; justify-content: center; gap: 5px; margin-bottom: 4px; }
+    .color-btn {
+      width: 18px; height: 18px; border-radius: 50%; border: 1px solid #ccc; cursor: pointer;
+    }
+    #holidayOptions { margin-top: 15px; }
+    #holidayOptions label { margin-right: 10px; }
   </style>
 </head>
 <body>
@@ -17,10 +23,19 @@
 <h2>주간 식단 입력</h2>
 <p>시작 날짜 선택 (월요일 기준): <input type="date" id="startDate"></p>
 
-<table>
+<h4>요일별 휴일 설정</h4>
+<div id="holidayOptions">
+  <label><input type="checkbox" value="0"> 월요일</label>
+  <label><input type="checkbox" value="1"> 화요일</label>
+  <label><input type="checkbox" value="2"> 수요일</label>
+  <label><input type="checkbox" value="3"> 목요일</label>
+  <label><input type="checkbox" value="4"> 금요일</label>
+</div>
+
+<table id="menuTable">
   <thead>
     <tr>
-      <th>구분</th>
+      <th>2025</th>
       <th>월</th>
       <th>화</th>
       <th>수</th>
@@ -28,44 +43,121 @@
       <th>금</th>
     </tr>
   </thead>
-  <tbody>
-    <tr>
-      <td>중식</td>
-      <td><input type="text" id="lunch0"></td>
-      <td><input type="text" id="lunch1"></td>
-      <td><input type="text" id="lunch2"></td>
-      <td><input type="text" id="lunch3"></td>
-      <td><input type="text" id="lunch4"></td>
-    </tr>
-    <tr>
-      <td>석식</td>
-      <td><input type="text" id="dinner0"></td>
-      <td><input type="text" id="dinner1"></td>
-      <td><input type="text" id="dinner2"></td>
-      <td><input type="text" id="dinner3"></td>
-      <td><input type="text" id="dinner4"></td>
-    </tr>
+  <tbody id="tableBody">
+    <!-- 중식, 사이드, 석식이 JS에서 자동 생성됨 -->
   </tbody>
 </table>
 
 <button class="save-btn" onclick="saveData()">입력 완료 → 결과 보기</button>
 
 <script>
+  const pastelColors = [
+    '#FFFFFF', '#FFD1DC', '#FFFACD', '#C1E1C1', '#B0E0E6', '#E6E6FA',
+    '#FADADD', '#FFDEAD', '#D8BFD8', '#E0FFFF', '#F5F5DC'
+  ];
+
+  function createMealSection(label, idPrefix) {
+    const tbody = document.getElementById('tableBody');
+    for (let row = 0; row < 10; row++) {
+      const tr = document.createElement('tr');
+
+      if (row === 0) {
+        const td = document.createElement('td');
+        td.rowSpan = 20;
+        td.textContent = label;
+        td.style.verticalAlign = 'middle';
+        tr.appendChild(td);
+      }
+
+      for (let col = 0; col < 5; col++) {
+        const td = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = `${idPrefix}${row}_${col}`;
+        td.appendChild(input);
+        tr.appendChild(td);
+      }
+
+      tbody.appendChild(tr);
+
+      const colorTr = document.createElement('tr');
+      const colorTd = document.createElement('td');
+      colorTd.colSpan = 5;
+      const colorDiv = document.createElement('div');
+      colorDiv.className = 'color-buttons';
+
+      pastelColors.forEach(color => {
+        const btn = document.createElement('div');
+        btn.className = 'color-btn';
+        btn.style.backgroundColor = color;
+        btn.onclick = () => tr.style.backgroundColor = color;
+        colorDiv.appendChild(btn);
+      });
+
+      colorTd.appendChild(colorDiv);
+      colorTr.appendChild(colorTd);
+      tbody.appendChild(colorTr);
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const tbody = document.getElementById('tableBody');
+
+    // 중식 생성
+    createMealSection('중식', 'lunch');
+
+    // 사이드 메뉴 행
+    const sideTr = document.createElement('tr');
+    const sideTd = document.createElement('td');
+    sideTd.textContent = '사이드';
+    sideTd.style.fontWeight = 'bold';
+    sideTr.appendChild(sideTd);
+
+    for (let i = 0; i < 5; i++) {
+      const td = document.createElement('td');
+      td.textContent = '셀프비빔밥 & 후식';
+      td.style.textAlign = 'center';
+      td.style.fontStyle = 'italic';
+      td.style.fontWeight = 'bold';
+      sideTr.appendChild(td);
+    }
+
+    tbody.appendChild(sideTr);
+
+    // 석식 생성
+    createMealSection('석식', 'dinner');
+  });
+
   function saveData() {
     const startDate = document.getElementById('startDate').value;
     if (!startDate) {
       alert('시작 날짜를 선택해주세요.');
       return;
     }
+
+    // 휴일 체크 수집
+    const holidayCheckboxes = document.querySelectorAll('#holidayOptions input[type="checkbox"]');
+    const holidays = Array.from(holidayCheckboxes)
+                          .filter(cb => cb.checked)
+                          .map(cb => parseInt(cb.value));
+
     const data = {
       startDate,
+      holidays,
       lunch: [],
       dinner: []
     };
-    for (let i = 0; i < 5; i++) {
-      data.lunch.push(document.getElementById('lunch' + i).value);
-      data.dinner.push(document.getElementById('dinner' + i).value);
+
+    for (let row = 0; row < 10; row++) {
+      const lunchRow = [], dinnerRow = [];
+      for (let col = 0; col < 5; col++) {
+        lunchRow.push(document.getElementById(`lunch${row}_${col}`).value);
+        dinnerRow.push(document.getElementById(`dinner${row}_${col}`).value);
+      }
+      data.lunch.push(lunchRow);
+      data.dinner.push(dinnerRow);
     }
+
     localStorage.setItem('weeklyMenu', JSON.stringify(data));
     window.location.href = 'menu_result.html';
   }
