@@ -35,7 +35,7 @@
 <table id="menuTable">
   <thead>
     <tr>
-      <th>2025</th>
+      <th>2025년</th>
       <th>월</th>
       <th>화</th>
       <th>수</th>
@@ -129,38 +129,56 @@
   });
 
   function saveData() {
-    const startDate = document.getElementById('startDate').value;
-    if (!startDate) {
-      alert('시작 날짜를 선택해주세요.');
-      return;
-    }
-
-    // 휴일 체크 수집
-    const holidayCheckboxes = document.querySelectorAll('#holidayOptions input[type="checkbox"]');
-    const holidays = Array.from(holidayCheckboxes)
-                          .filter(cb => cb.checked)
-                          .map(cb => parseInt(cb.value));
-
-    const data = {
-      startDate,
-      holidays,
-      lunch: [],
-      dinner: []
-    };
-
-    for (let row = 0; row < 10; row++) {
-      const lunchRow = [], dinnerRow = [];
-      for (let col = 0; col < 5; col++) {
-        lunchRow.push(document.getElementById(`lunch${row}_${col}`).value);
-        dinnerRow.push(document.getElementById(`dinner${row}_${col}`).value);
-      }
-      data.lunch.push(lunchRow);
-      data.dinner.push(dinnerRow);
-    }
-
-    localStorage.setItem('weeklyMenu', JSON.stringify(data));
-    window.location.href = 'menu_result.html';
+  const startDate = document.getElementById('startDate').value;
+  if (!startDate) {
+    alert('시작 날짜를 선택해주세요.');
+    return;
   }
+
+  // 휴일 체크 수집
+  const holidayCheckboxes = document.querySelectorAll('#holidayOptions input[type="checkbox"]');
+  const holidays = Array.from(holidayCheckboxes)
+                        .filter(cb => cb.checked)
+                        .map(cb => parseInt(cb.value));
+
+  const data = {
+    startDate,
+    holidays,
+    lunch: [],
+    dinner: [],
+    lunchColors: [],
+    dinnerColors: []
+  };
+
+  for (let row = 0; row < 10; row++) {
+    const lunchRow = [], dinnerRow = [];
+    const lunchColorRow = [], dinnerColorRow = [];
+
+    for (let col = 0; col < 5; col++) {
+      const lunchInput = document.getElementById(`lunch${row}_${col}`);
+      const dinnerInput = document.getElementById(`dinner${row}_${col}`);
+
+      lunchRow.push(lunchInput.value);
+      dinnerRow.push(dinnerInput.value);
+
+      // 해당 input의 부모의 부모 tr에서 배경색을 추출
+      const lunchBg = lunchInput.closest('tr').style.backgroundColor || '';
+      const dinnerBg = dinnerInput.closest('tr').style.backgroundColor || '';
+
+      lunchColorRow.push(lunchBg);
+      dinnerColorRow.push(dinnerBg);
+    }
+
+    data.lunch.push(lunchRow);
+    data.dinner.push(dinnerRow);
+    data.lunchColors.push(lunchColorRow);
+    data.dinnerColors.push(dinnerColorRow);
+  }
+
+  localStorage.setItem('weeklyMenu', JSON.stringify(data));
+  window.location.href = 'menu_result.html';
+}
+
 </script>
 
 </body>
