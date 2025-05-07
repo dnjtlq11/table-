@@ -2,110 +2,113 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>주간 식단 결과</title>
+  <title>식단 결과 페이지</title>
   <style>
     body { font-family: Arial; padding: 20px; }
     h2 { margin-bottom: 10px; }
     table { border-collapse: collapse; width: 100%; margin-top: 20px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
     th { background-color: #f0f0f0; }
-    .holiday { background-color: #ffecec; color: #cc0000; font-weight: bold; }
+    .holiday { background-color: #ffecec; font-weight: bold; }
   </style>
 </head>
 <body>
 
 <h2>주간 식단 결과</h2>
-<p id="dateRange"></p>
+<div id="dateRange"></div>
 
-<table id="resultTable">
-  <thead>
-    <tr>
-      <th>2025</th>
-      <th>월</th>
-      <th>화</th>
-      <th>수</th>
-      <th>목</th>
-      <th>금</th>
-    </tr>
+<table>
+  <thead id="resultHeader">
+    <!-- 동적으로 생성 -->
   </thead>
-  <tbody id="resultBody">
-    <!-- JS로 식단 결과 삽입 -->
+  <tbody id="resultTableBody">
+    <!-- 결과가 여기에 렌더링됨 -->
   </tbody>
 </table>
 
 <script>
   const data = JSON.parse(localStorage.getItem('weeklyMenu'));
+  const tableBody = document.getElementById('resultTableBody');
+  const header = document.getElementById('resultHeader');
+
+  if (!data) {
+    document.body.innerHTML = '<p>저장된 식단 데이터가 없습니다.</p>';
+    throw new Error('No data');
+  }
+
+  // 날짜 및 요일 생성
   const startDate = new Date(data.startDate);
-  const holidays = data.holidays || [];
-
-  // 날짜 범위 표시
-  const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + 4);
-  const toDateStr = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
-  document.getElementById('dateRange').textContent =
-    `식단 기간: ${toDateStr(startDate)} ~ ${toDateStr(endDate)}`;
-
   const weekdays = ['월', '화', '수', '목', '금'];
-  const tbody = document.getElementById('resultBody');
+  const dateLabels = [];
 
-  function renderSection(label, rows) {
-    for (let row = 0; row < 10; row++) {
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
+    const label = `${d.getMonth() + 1}/${d.getDate()} (${weekdays[i]})`;
+    dateLabels.push(label);
+  }
+
+  document.getElementById('dateRange').innerHTML =
+    `<strong>기간:</strong> ${dateLabels[0]} ~ ${dateLabels[4]}`;
+
+  // 동적으로 thead 생성
+  const headerRow = document.createElement('tr');
+  const firstTh = document.createElement('th');
+  firstTh.textContent = '2025년';
+  headerRow.appendChild(firstTh);
+
+  for (let i = 0; i < 5; i++) {
+    const th = document.createElement('th');
+    th.textContent = dateLabels[i];
+    headerRow.appendChild(th);
+  }
+  header.appendChild(headerRow);
+
+  // 중식, 사이드, 석식 렌더링
+  createSectionRow('중식', data.lunch, false, data.lunchColors);
+  createSectionRow('사이드', [], true);
+  createSectionRow('석식', data.dinner, false, data.dinnerColors);
+
+  function createSectionRow(label, contentList, isSide = false, colorList = null) {
+    for (let row = 0; row < (isSide ? 1 : 10); row++) {
       const tr = document.createElement('tr');
 
       if (row === 0) {
-        const labelTd = document.createElement('td');
-        labelTd.textContent = label;
-        labelTd.rowSpan = 10;
-        labelTd.style.verticalAlign = 'middle';
-        labelTd.style.fontWeight = 'bold';
-        tr.appendChild(labelTd);
+        const td = document.createElement('td');
+        td.rowSpan = isSide ? 1 : 10;
+        td.textContent = label;
+        td.style.verticalAlign = 'middle';
+        td.style.fontWeight = 'bold';
+        tr.appendChild(td);
       }
 
       for (let col = 0; col < 5; col++) {
-        if (row === 0 && holidays.includes(col)) {
-          // 휴일 열 병합
-          const holidayTd = document.createElement('td');
-          holidayTd.textContent = '휴일';
-          holidayTd.className = 'holiday';
-          holidayTd.rowSpan = 10; // 열 병합
-          holidayTd.style.verticalAlign = 'middle';
-          holidayTd.style.textAlign = 'center';
-          tr.appendChild(holidayTd);
-        } else if (!holidays.includes(col)) {
-          // 일반 셀 추가
-          const td = document.createElement('td');
-          td.textContent = rows[row][col] || '';
-          tr.appendChild(td);
+        const td = document.createElement('td');
+
+        if (isSide) {
+          td.textContent = '셀프비빔밥 & 후식';
+          td.style.fontStyle = 'italic';
+          td.style.fontWeight = 'bold';
+        } else {
+          td.textContent = contentList[row][col] || '';
+
+          // 색상 적용
+          if (colorList && colorList[row] && colorList[row][col]) {
+            td.style.backgroundColor = colorList[row][col];
+          }
         }
+
+        if (data.holidays.includes(col)) {
+          td.classList.add('holiday');
+          td.textContent += ' (휴일)';
+        }
+
+        tr.appendChild(td);
       }
 
-      tbody.appendChild(tr);
+      tableBody.appendChild(tr);
     }
   }
-
-  // 중식 출력
-  renderSection('중식', data.lunch);
-
-  // 사이드 메뉴 행
-  const sideTr = document.createElement('tr');
-  const sideTd = document.createElement('td');
-  sideTd.textContent = '사이드';
-  sideTd.style.fontWeight = 'bold';
-  sideTr.appendChild(sideTd);
-
-  for (let i = 0; i < 5; i++) {
-    const td = document.createElement('td');
-    td.textContent = holidays.includes(i) ? '휴일' : '셀프비빔밥 & 후식';
-    if (holidays.includes(i)) td.className = 'holiday';
-    td.style.fontStyle = 'italic';
-    td.style.fontWeight = 'bold';
-    td.style.textAlign = 'center';
-    sideTr.appendChild(td);
-  }
-  tbody.appendChild(sideTr);
-
-  // 석식 출력
-  renderSection('석식', data.dinner);
 </script>
 
 </body>
